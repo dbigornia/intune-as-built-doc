@@ -139,7 +139,10 @@ Keep the `snapshots` folder - it's the history.
 - Encrypted custom OMA-URI values and secret settings show as `(encrypted)` / `(secret)`.
 - Co-management workload settings live in ConfigMgr, not Graph - document those by hand.
 
-## Security and license
+## Security, license and disclaimer
 
 See [SECURITY.md](SECURITY.md) for how the tool handles tenant data and how to report a vulnerability.
 Released under the [MIT License](LICENSE). Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+
+This is an independent project and is not affiliated with, endorsed by, or supported by Microsoft.
+Microsoft, Intune, Entra, Windows and Word are trademarks of the Microsoft group of companies.
