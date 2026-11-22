@@ -612,7 +612,7 @@ if ($ExportNotesTemplate) {
             [pscustomobject]@{ ObjectId = $k; Category = '(not in this snapshot)'; Name = $e.Name; Purpose = $e.Purpose; Owner = $e.Owner; DependsOn = $e.DependsOn; LastValidated = $e.LastValidated; Rollback = $e.Rollback }
         }
     }
-    @($out) + @($orphans) | Export-Csv -LiteralPath $ExportNotesTemplate -NoTypeInformation -Encoding utf8
+    @($out) + @($orphans) | Export-Csv -LiteralPath $ExportNotesTemplate -Encoding utf8
     Write-Host "Notes template written to $ExportNotesTemplate ($(@($out).Count) objects)" -ForegroundColor Green
 }
 #endregion
