@@ -275,7 +275,10 @@ $meta = [ordered]@{
 ConvertTo-Json -InputObject $meta -Depth 10 | Set-Content -LiteralPath (Join-Path $snapDir 'meta.json') -Encoding utf8NoBOM
 #endregion
 
-Disconnect-MgGraph | Out-Null
+# The Graph SDK can warn that it failed to clear its token cache on sign-out (known SDK issue,
+# more likely when signed in without -TenantId). The snapshot is already complete at this point.
+try { Disconnect-MgGraph -WarningAction SilentlyContinue -ErrorAction Stop | Out-Null }
+catch { Write-Verbose "Disconnect-MgGraph: $($_.Exception.Message)" }
 Write-Host "`nSnapshot written to $snapDir" -ForegroundColor Green
 if ($warnings.Count) { Write-Warning "$($warnings.Count) section(s) had errors - see meta.json" }
 $snapDir
