@@ -39,14 +39,29 @@ function Convert-DocxToPdfWord {
 }
 
 function Convert-DocxToPdfLibreOffice {
-    param([Parameter(Mandatory)][string]$DocxPath, [Parameter(Mandatory)][string]$PdfPath, [Parameter(Mandatory)][string]$Soffice)
+    param(
+        [Parameter(Mandatory)][string]$DocxPath, [Parameter(Mandatory)][string]$PdfPath, [Parameter(Mandatory)][string]$Soffice,
+        [int]$TimeoutSeconds = 600
+    )
     $outDir = Join-Path ([IO.Path]::GetTempPath()) "IntuneAsBuilt-pdf-$([guid]::NewGuid())"
     $loProfile = Join-Path ([IO.Path]::GetTempPath()) "IntuneAsBuilt-lo-$([guid]::NewGuid())"
     New-Item -ItemType Directory -Path $outDir | Out-Null
     try {
         # Separate profile so it works even if LibreOffice is already open
         $profileUri = ([Uri](New-Item -ItemType Directory -Path $loProfile).FullName).AbsoluteUri
-        & $Soffice --headless --norestore "-env:UserInstallation=$profileUri" --convert-to pdf --outdir $outDir $DocxPath | Out-Null
+        $psi = [System.Diagnostics.ProcessStartInfo]::new($Soffice)
+        foreach ($a in @('--headless', '--norestore', '--nolockcheck', "-env:UserInstallation=$profileUri",
+                         '--convert-to', 'pdf', '--outdir', $outDir, $DocxPath)) { $psi.ArgumentList.Add($a) }
+        $psi.UseShellExecute = $false
+        $sw = [System.Diagnostics.Stopwatch]::StartNew()
+        $proc = [System.Diagnostics.Process]::Start($psi)
+        while (-not $proc.WaitForExit(15000)) {
+            if ($sw.Elapsed.TotalSeconds -ge $TimeoutSeconds) {
+                try { $proc.Kill($true) } catch { }
+                throw "LibreOffice did not finish within $TimeoutSeconds s and was stopped. Try a larger -PdfTimeoutSeconds, or convert manually: soffice --headless --convert-to pdf `"$DocxPath`""
+            }
+            Write-Host ("  still converting... {0:N0} s" -f $sw.Elapsed.TotalSeconds)
+        }
         $produced = Join-Path $outDir ([IO.Path]::GetFileNameWithoutExtension($DocxPath) + '.pdf')
         if (-not (Test-Path -LiteralPath $produced)) { throw "LibreOffice did not produce a PDF (exit code $LASTEXITCODE)." }
         Move-Item -LiteralPath $produced -Destination $PdfPath -Force
@@ -61,7 +76,8 @@ function Export-AsBuiltPdf {
     param(
         [Parameter(Mandatory)][string]$DocxPath,
         [Parameter(Mandatory)][string]$PdfPath,
-        [ValidateSet('Auto', 'Word', 'LibreOffice')][string]$Engine = 'Auto'
+        [ValidateSet('Auto', 'Word', 'LibreOffice')][string]$Engine = 'Auto',
+        [int]$TimeoutSeconds = 600
     )
     $DocxPath = (Resolve-Path -LiteralPath $DocxPath).Path
     $PdfPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($PdfPath)
@@ -79,6 +95,7 @@ function Export-AsBuiltPdf {
 
     $soffice = Find-Soffice
     if (-not $soffice) { throw 'No PDF engine found. Install Microsoft Word (Windows) or LibreOffice.' }
-    Convert-DocxToPdfLibreOffice -DocxPath $DocxPath -PdfPath $PdfPath -Soffice $soffice
+    Write-Host "  Converting with LibreOffice ($soffice) - large documents can take a few minutes"
+    Convert-DocxToPdfLibreOffice -DocxPath $DocxPath -PdfPath $PdfPath -Soffice $soffice -TimeoutSeconds $TimeoutSeconds
     return 'LibreOffice'
 }

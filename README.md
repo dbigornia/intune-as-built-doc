@@ -73,7 +73,7 @@ Word asks to update fields when you open the .docx - choose **Yes** to build the
 - `-HideMissingNotes` - drop the "Design notes: not yet documented" line.
 - `-Pdf` - also save a PDF next to the .docx.
   - **Word** (used automatically on Windows when installed): builds the table of contents, adds heading bookmarks, and re-saves the .docx with the TOC filled in.
-  - **LibreOffice** (fallback, or `-PdfEngine LibreOffice`): no Office needed, but the TOC isn't built in the PDF.
+  - **LibreOffice** (fallback, or `-PdfEngine LibreOffice`): no Office needed, but the TOC isn't built in the PDF. Large documents can take several minutes; the conversion is stopped after `-PdfTimeoutSeconds` (default 600).
   - Microsoft doesn't support automating Word from unattended scheduled tasks. On a server, use LibreOffice and `-PdfEngine LibreOffice`.
 
 ## Permissions

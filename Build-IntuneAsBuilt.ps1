@@ -26,6 +26,8 @@
     bookmarks, and saves the .docx with the TOC filled in), otherwise LibreOffice.
 .PARAMETER PdfEngine
     Auto (default), Word or LibreOffice.
+.PARAMETER PdfTimeoutSeconds
+    Maximum time for the LibreOffice conversion before it is stopped (default 600).
 .PARAMETER AllPlatforms
     Include iOS/Android/macOS objects. Default is Windows only.
 
@@ -47,7 +49,8 @@ param(
     [switch]$IncludeEmptyValues,
     [switch]$HideMissingNotes,
     [switch]$Pdf,
-    [ValidateSet('Auto', 'Word', 'LibreOffice')][string]$PdfEngine = 'Auto'
+    [ValidateSet('Auto', 'Word', 'LibreOffice')][string]$PdfEngine = 'Auto',
+    [int]$PdfTimeoutSeconds = 600
 )
 
 $ErrorActionPreference = 'Stop'
@@ -583,7 +586,7 @@ if ($Pdf) {
     $pdfPath = [IO.Path]::ChangeExtension($saved, '.pdf')
     Write-Host 'Exporting PDF...' -ForegroundColor Cyan
     try {
-        $engine = Export-AsBuiltPdf -DocxPath $saved -PdfPath $pdfPath -Engine $PdfEngine
+        $engine = Export-AsBuiltPdf -DocxPath $saved -PdfPath $pdfPath -Engine $PdfEngine -TimeoutSeconds $PdfTimeoutSeconds
         Write-Host "PDF written to $pdfPath (engine: $engine)" -ForegroundColor Green
         if ($engine -eq 'LibreOffice') {
             Write-Warning 'LibreOffice does not build the table of contents - the PDF shows the TOC placeholder. Use Word for a complete TOC.'
