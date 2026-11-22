@@ -1,0 +1,18 @@
+# Tenant data - never commit
+snapshots/
+notes.csv
+
+# Generated documents
+*.docx
+*.pdf
+
+# Credentials
+*.pfx
+*.cer
+*.pem
+*.key
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
