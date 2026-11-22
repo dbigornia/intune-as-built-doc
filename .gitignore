@@ -1,7 +1,11 @@
-# Tenant data - never commit
+# Tenant data belongs in your private workspace (see README > Workspace), never in this repo
 snapshots/
+output/
+notes.csv
+template.docx
+template.dotx
 
-# Generated documents (the company template is kept)
+# Generated documents (the generic templates in templates/ are kept)
 *.docx
 *.pdf
 !templates/*.docx

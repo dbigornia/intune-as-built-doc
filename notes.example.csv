@@ -1,0 +1,3 @@
+"ObjectId","Category","Name","Purpose","Owner","DependsOn","LastValidated","Rollback"
+"00000000-1111-2222-3333-444444444444","Settings catalog","WIN - Baseline - BitLocker","Enforce XTS-AES 256 and escrow recovery keys to Entra ID","Endpoint team","WIN - Compliance - BitLocker required","2026-11-01 - lab VM and Latitude 7450","Unassign; devices keep current encryption state"
+"55555555-6666-7777-8888-999999999999","Autopilot profile","AP - Entra join - User driven","Standard corporate laptop deployment","Endpoint team","SG-AP-Corporate-Devices (dynamic, group tag CORP)","2026-10-20 - lab VM","Assign the previous profile to SG-AP-Corporate-Devices"

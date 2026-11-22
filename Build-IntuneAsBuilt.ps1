@@ -8,8 +8,12 @@
     Covers Windows enrollment, device policies, and apps & scripts. Hand-written design notes
     (purpose, owner, rollback ...) are merged in from a CSV keyed by object ID.
 
+.PARAMETER Workspace
+    Private folder holding tenant data: snapshots\, output\, notes.csv and an optional template.docx/.dotx.
+    Default: $env:INTUNEASBUILT_WORKSPACE. In a workspace, notes.csv and the template are picked up
+    automatically and notes.csv is refreshed on every build. Explicit parameters override these defaults.
 .PARAMETER SnapshotPath
-    Snapshot folder (e.g. .\snapshots\2026-11-22_0330Z). Defaults to the newest folder under .\snapshots.
+    Snapshot folder (e.g. snapshots\2026-11-22_0330Z). Defaults to the newest folder under <workspace>\snapshots.
 .PARAMETER TemplatePath
     Optional company .docx/.dotx. Its headers, footers, page setup and styles are kept. Put a paragraph
     containing {{ASBUILT}} where the generated content should go (otherwise the body is replaced).
@@ -26,12 +30,13 @@
     Include iOS/Android/macOS objects. Default is Windows only.
 
 .EXAMPLE
-    .\Build-IntuneAsBuilt.ps1 -Pdf
+    .\Build-IntuneAsBuilt.ps1 -Workspace D:\intune-as-built-config -Pdf
 .EXAMPLE
     .\Build-IntuneAsBuilt.ps1 -Pdf -NotesPath .\notes.csv -ExportNotesTemplate .\notes.csv -TemplatePath .\templates\Company-Template.docx
 #>
 [CmdletBinding()]
 param(
+    [string]$Workspace,
     [string]$SnapshotPath,
     [string]$OutputPath,
     [string]$TemplatePath,
@@ -48,11 +53,18 @@ param(
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/Docx.ps1')
 . (Join-Path $PSScriptRoot 'lib/Pdf.ps1')
+. (Join-Path $PSScriptRoot 'lib/Workspace.ps1')
+$ws = Resolve-AsBuiltWorkspace -Workspace $Workspace -ToolRoot $PSScriptRoot
+if (-not $NotesPath -and $ws.Notes) { $NotesPath = $ws.Notes }
+if (-not $PSBoundParameters.ContainsKey('ExportNotesTemplate') -and $ws.Notes) { $ExportNotesTemplate = $ws.Notes }
+if (-not $TemplatePath -and $ws.Template) { $TemplatePath = $ws.Template; Write-Host "Using template $TemplatePath" }
 
 #region Load snapshot
 if (-not $SnapshotPath) {
-    $SnapshotPath = Get-ChildItem -Directory (Join-Path $PSScriptRoot 'snapshots') | Sort-Object Name | Select-Object -Last 1 -ExpandProperty FullName
-    if (-not $SnapshotPath) { throw 'No snapshot found. Run Invoke-IntuneCollect.ps1 first or pass -SnapshotPath.' }
+    if (Test-Path -LiteralPath $ws.Snapshots) {
+        $SnapshotPath = Get-ChildItem -Directory -LiteralPath $ws.Snapshots | Sort-Object Name | Select-Object -Last 1 -ExpandProperty FullName
+    }
+    if (-not $SnapshotPath) { throw "No snapshot found in $($ws.Snapshots). Run Invoke-IntuneCollect.ps1 first or pass -SnapshotPath." }
 }
 Write-Host "Using snapshot $SnapshotPath" -ForegroundColor Cyan
 
@@ -562,7 +574,7 @@ if ($withContent.Count) {
 
 #region Save
 if (-not $OutputPath) {
-    $OutputPath = Join-Path $PSScriptRoot ("Intune-AsBuilt_{0}_{1}.docx" -f (($tenantName -replace '[^\w\-]', '')), (Split-Path $SnapshotPath -Leaf))
+    $OutputPath = Join-Path $ws.Output ("Intune-AsBuilt_{0}_{1}.docx" -f (($tenantName -replace '[^\w\-]', '')), (Split-Path $SnapshotPath -Leaf))
 }
 $saved = Save-AsBuiltDocument -Doc $doc -Path $OutputPath -TemplatePath $TemplatePath -Title "$Title - $tenantName" -FooterText "$Title - $tenantName - snapshot $collectedAt UTC"
 Write-Host "As-built written to $saved" -ForegroundColor Green

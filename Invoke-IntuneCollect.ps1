@@ -5,14 +5,14 @@
     Stage 1 of IntuneAsBuilt: captures Intune configuration from Microsoft Graph into a dated JSON snapshot.
 
 .DESCRIPTION
-    Read-only. Each run writes a new folder under -OutputRoot (e.g. snapshots\2026-11-22_0330Z) containing one
+    Read-only. Each run writes a new folder under <workspace>\snapshots (e.g. snapshots\2026-11-22_0330Z) containing one
     JSON file per area plus meta.json. Snapshots are the point-in-time baseline / audit evidence and the input
     for Build-IntuneAsBuilt.ps1. Script bodies are NOT stored unless -IncludeScriptContent is used; a SHA-256
     hash of each script is always stored so changes are still detectable.
 
 .EXAMPLE
     # Unattended, app registration with certificate (recommended)
-    .\Invoke-IntuneCollect.ps1 -TenantId contoso.onmicrosoft.com -ClientId <appId> -CertificateThumbprint <thumb>
+    .\Invoke-IntuneCollect.ps1 -Workspace D:\intune-as-built-config -TenantId contoso.onmicrosoft.com -ClientId <appId> -CertificateThumbprint <thumb>
 
 .EXAMPLE
     # Lab / ad-hoc, delegated sign-in
@@ -34,13 +34,19 @@ param(
     [Parameter(Mandatory, ParameterSetName = 'Certificate')][string]$CertificateThumbprint,
     [Parameter(Mandatory, ParameterSetName = 'Interactive')][switch]$Interactive,
 
-    [string]$OutputRoot = (Join-Path $PSScriptRoot 'snapshots'),
+    # Private folder for tenant data (snapshots, notes, template, output). Default: $env:INTUNEASBUILT_WORKSPACE
+    [string]$Workspace,
+    # Override where snapshots are written (default: <workspace>\snapshots)
+    [string]$OutputRoot,
     [switch]$IncludeScriptContent,
     [switch]$IncludeAutopilotDevices
 )
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/Graph.ps1')
+. (Join-Path $PSScriptRoot 'lib/Workspace.ps1')
+$ws = Resolve-AsBuiltWorkspace -Workspace $Workspace -ToolRoot $PSScriptRoot
+if (-not $OutputRoot) { $OutputRoot = $ws.Snapshots }
 $CollectorVersion = '1.0.0'
 $dm  = 'beta/deviceManagement'
 $dam = 'beta/deviceAppManagement'
