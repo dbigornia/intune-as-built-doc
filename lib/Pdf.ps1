@@ -43,8 +43,12 @@ function Convert-DocxToPdfLibreOffice {
         [Parameter(Mandatory)][string]$DocxPath, [Parameter(Mandatory)][string]$PdfPath, [Parameter(Mandatory)][string]$Soffice,
         [int]$TimeoutSeconds = 600
     )
-    $outDir = Join-Path ([IO.Path]::GetTempPath()) "IntuneAsBuilt-pdf-$([guid]::NewGuid())"
-    $loProfile = Join-Path ([IO.Path]::GetTempPath()) "IntuneAsBuilt-lo-$([guid]::NewGuid())"
+    # Work folders go next to the PDF, not in the system temp folder: a snap-packaged LibreOffice has a
+    # private /tmp and can't see files there (it then hangs). Non-hidden names, for the same reason.
+    $workRoot = Split-Path -Parent $PdfPath
+    $id = [guid]::NewGuid().ToString('N').Substring(0, 8)
+    $outDir = Join-Path $workRoot "_pdf-work-$id"
+    $loProfile = Join-Path $workRoot "_lo-profile-$id"
     New-Item -ItemType Directory -Path $outDir | Out-Null
     try {
         # Separate profile so it works even if LibreOffice is already open
