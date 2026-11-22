@@ -1,10 +1,11 @@
 # Tenant data - never commit
 snapshots/
-notes.csv
 
-# Generated documents
+# Generated documents (the company template is kept)
 *.docx
 *.pdf
+!templates/*.docx
+!templates/*.dotx
 
 # Credentials
 *.pfx

@@ -60,7 +60,7 @@ All calls are `GET`. Nothing is written to the tenant.
 .\Build-IntuneAsBuilt.ps1 -ExportNotesTemplate .\notes.csv
 
 # 3. Fill in notes.csv, then rebuild with notes and your company template
-.\Build-IntuneAsBuilt.ps1 -NotesPath .\notes.csv -ExportNotesTemplate .\notes.csv -TemplatePath .\Company.dotx
+.\Build-IntuneAsBuilt.ps1 -NotesPath .\notes.csv -ExportNotesTemplate .\notes.csv -TemplatePath .\templates\Company-Template.docx
 ```
 
 Word asks to update fields when you open the document - choose **Yes** to build the table of contents.
@@ -81,6 +81,8 @@ Word asks to update fields when you open the document - choose **Yes** to build 
 
 ## Design notes (the "why")
 
+`notes.csv` lives in the repo root and is committed, so the history of every design decision is kept in git.
+
 `notes.csv` is keyed by Intune object ID, so renaming a policy doesn't lose its notes:
 
 `ObjectId, Category, Name, Purpose, Owner, DependsOn, LastValidated, Rollback`
@@ -90,7 +92,11 @@ notes for objects that were deleted from the tenant (marked `(not in this snapsh
 
 ## Company template
 
-Pass a `.docx` or `.dotx`. Its headers, footers, logo, page size, margins and styles are kept.
+A generic template is included at `templates/Company-Template.docx`: header, footer with page numbers, a cover
+page with document control and revision history, and the `{{ASBUILT}}` marker. Replace `COMPANY NAME` and
+`[COMPANY LOGO]` with your own (Insert > Pictures for the logo), adjust colours in the styles, and commit it.
+
+You can also pass your own `.docx` or `.dotx`. Its headers, footers, logo, page size, margins and styles are kept.
 - Put a paragraph containing `{{ASBUILT}}` where the generated content should go (for example after your cover page). Without it, the template body is replaced.
 - Make sure the template defines **Title, Heading 1, Heading 2 and Heading 3** (apply each once, then delete the text). The script warns if they're missing.
 - Style IDs are English (`Heading1`...). Templates created in a non-English Word may use different IDs.

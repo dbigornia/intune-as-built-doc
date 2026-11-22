@@ -28,7 +28,7 @@
 .EXAMPLE
     .\Build-IntuneAsBuilt.ps1 -Pdf
 .EXAMPLE
-    .\Build-IntuneAsBuilt.ps1 -Pdf -NotesPath .\notes.csv -ExportNotesTemplate .\notes.csv -TemplatePath .\Company.dotx
+    .\Build-IntuneAsBuilt.ps1 -Pdf -NotesPath .\notes.csv -ExportNotesTemplate .\notes.csv -TemplatePath .\templates\Company-Template.docx
 #>
 [CmdletBinding()]
 param(
